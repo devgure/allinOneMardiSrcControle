@@ -1,0 +1,1 @@
+# Encore\n> Scalable Matching Platform\n\n## 📁 Structure\n- **client/** — Multi-platform UIs\n- **gateway/** — BFF & API Gateway\n- **services/** — Microservices\n- **ai-engine/** — Recommendation & NLP\n- **data/** — Infrastructure as Code\n\n## 🚀 Quick Start\n```bash\nmake up\n```

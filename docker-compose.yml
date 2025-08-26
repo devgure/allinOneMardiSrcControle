@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # Clients
+  web-mobile:
+    build: ./client/web-mobile
+    ports: 
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:4000
+
+  # Gateway
+  gateway:
+    build: ./gateway
+    ports:
+      - "4000:4000"
+    depends_on:
+      - auth-service
+      - match-service
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/sparkly
+
+  # Microservices
+  auth-service:
+    build: ./services/auth-service
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/sparkly
+      - JWT_SECRET=${JWT_SECRET}
+
+  profile-service:
+    build: ./services/profile-service
+    ports:
+      - "4002:4002"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/sparkly
+
+  discovery-service:
+    build: ./services/discovery-service
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - ELASTICSEARCH_NODE=http://elasticsearch:9200
+
+  match-service:
+    build: ./services/match-service
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/sparkly
+
+  chat-service:
+    build: ./services/chat-service
+    ports:
+      - "4004:4004"
+
+  notification-service:
+    build: ./services/notification-service
+
+  analytics-service:
+    build: ./services/analytics-service
+
+  admin-service:
+    build: ./services/admin-service
+    ports:
+      - "4005:4005"
+
+  billing-service:
+    build: ./services/billing-service
+
+  media-service:
+    build: ./services/media-service
+
+  # AI Services
+  ai-recommendation:
+    build: ./ai-engine/recommendation-engine
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=/app/models/collab_model.pkl
+
+  ai-image-moderation:
+    build: ./ai-engine/image-moderation
+    ports:
+      - "8001:8001"
+
+  # Data Layer
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address :9001
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  # Monitoring
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_storage:/var/lib/grafana
+
+volumes:
+  mongo_data:
+  minio_data:
+  grafana_storage:
